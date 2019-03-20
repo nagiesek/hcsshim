@@ -9,8 +9,12 @@ import (
 	"errors"
 )
 
+type HcnNetworkMakerFunc func() (*HostComputeNetwork, error)
+
 func TestCreateDeleteNetworks(t *testing.T) {
-	err := CreateDeleteNetworksHelper(t, HcnCreateTestNATNetwork)
+	var netMaker HcnNetworkMakerFunc
+	netMaker = HcnCreateTestNATNetwork
+	err := CreateDeleteNetworksHelper(t, netMaker)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,14 +28,14 @@ func TestCreateDeleteNetworks(t *testing.T) {
 	if err == nil {
 		t.Fatal(errors.New("expected failure for subnet with no default gateway provided"))
 	}
-	snet2 := CreateSubnet("192.168.100.0/24")
-	err = CreateDeleteNetworksHelper(t, func() (*HostComputeNetwork, error) {return HcnCreateTestNATNetworkWithSubnet(snet1)})
+	snet2 := CreateSubnet("192.168.100.0/24", "", "")
+	err = CreateDeleteNetworksHelper(t, func() (*HostComputeNetwork, error) {return HcnCreateTestNATNetworkWithSubnet(snet2)})
 	if err == nil {
 		t.Fatal(errors.New("expected failure for subnet with no nexthop provided but a gateway provided"))
 	}
 }
 
-func CreateDeleteNetworksHelper(t *testing.T, networkFunction func() (*HostcomputeNetwork, error)) (error) {
+func CreateDeleteNetworksHelper(t *testing.T, networkFunction HcnNetworkMakerFunc ) (error) {
 	network, err := networkFunction()
 	if err != nil {
 		return err
@@ -45,21 +49,7 @@ func CreateDeleteNetworksHelper(t *testing.T, networkFunction func() (*Hostcompu
 	if err != nil {
 		return err
 	}
-
-func TestCreateDeleteNetwork(t *testing.T) {
-	network, err := HcnCreateTestNATNetwork()
-	if err != nil {
-		t.Fatal(err)
-	}
-	jsonString, err := json.Marshal(network)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Printf("Network JSON:\n%s \n", jsonString)
-	err = network.Delete()
-	if err != nil {
-		t.Fatal(err)
-	}
+	return nil
 }
 
 func TestGetNetworkByName(t *testing.T) {

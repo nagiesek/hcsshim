@@ -36,18 +36,17 @@ func cleanup(networkName string) {
 	}
 }
 
-func HcnGenerateNATNetwork(subnet *Subnet) (*HostComputeNetwork, error) {
+func HcnGenerateNATNetwork(subnet *Subnet) *HostComputeNetwork {
 	ipams :=  []Ipam{}
 	if subnet != nil {
-		ipam := {
+		ipam := Ipam{
 			Type: "Static",
 			Subnets: []Subnet{
-				subnet
+				*subnet,
 			},
 		}
 		ipams = append(ipams, ipam)
 	}
-	if subnet
 	network := &HostComputeNetwork{
 		Type: "NAT",
 		Name: NatTestNetworkName,
@@ -70,16 +69,17 @@ func HcnGenerateNATNetwork(subnet *Subnet) (*HostComputeNetwork, error) {
 
 func HcnCreateTestNATNetworkWithSubnet(subnet *Subnet) (*HostComputeNetwork, error) {
 	cleanup(NatTestNetworkName)
-	network := HcnGenerateNATNetwork(subnet)
+network := HcnGenerateNATNetwork(subnet)
 	return network.Create()	
 }
 
 func HcnCreateTestNATNetwork() (*HostComputeNetwork, error) {
-	HcnCreateTestNATNetworkWithSubnet(GetDefaultSubnet)
+	return HcnCreateTestNATNetworkWithSubnet(GetDefaultSubnet())
 }
 
 func CreateTestOverlayNetwork() (*HostComputeNetwork, error) {
 	cleanup(OverlayTestNetworkName)
+	subnet := GetDefaultSubnet()
 	network := &HostComputeNetwork{
 		Type: "Overlay",
 		Name: OverlayTestNetworkName,
@@ -95,9 +95,7 @@ func CreateTestOverlayNetwork() (*HostComputeNetwork, error) {
 			{
 				Type: "Static",
 				Subnets: []Subnet{
-					{
-						GetDefaultSubnet()
-					},
+					*subnet,
 				},
 			},
 		},
